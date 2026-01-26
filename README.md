@@ -26,7 +26,7 @@ Perfect for finding potential insiders, whales, or conviction holders!
 ## 🚀 Quick Start
 
 ### Option 1: Use Online (Recommended)
-Visit: `https://YOUR-USERNAME.github.io/solana-wallet-tracker/`
+Visit: `https://anupaminnit.github.io/Solana-Wallet-Tracker/`
 
 ### Option 2: Run Locally
 1. Download `index.html`
@@ -132,7 +132,7 @@ Check Time: Post-announcement
 3. Go to **Settings** → **Pages**
 4. Select **main branch** as source
 5. Save and wait 1-2 minutes
-6. Access at: `https://YOUR-USERNAME.github.io/REPO-NAME/`
+6. Access at: `https://anupaminnit.github.io/Solana-Wallet-Tracker/`
 
 ## 🐛 Troubleshooting
 
@@ -182,7 +182,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - 🐛 **Report Issues:** [GitHub Issues](https://github.com/anupaminnit/solana-wallet-tracker/issues)
 - 💬 **Questions:** Open a discussion on GitHub
-- 📧 **Email:** your-email@example.com
+- 📧 **Email:** anupamsd2403@outlook.com
 
 ## 🎉 Acknowledgments
 

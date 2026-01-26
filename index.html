@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Wallet Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🕵️ Solana Wallet Tracker</h1>
+            <p class="text-blue-100">Find diamond hands who bought early and held strong</p>
+        </div>
+
+        <!-- Configuration Panel -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+            <h2 class="text-2xl font-bold text-white mb-4">⚙️ Configuration</h2>
+
+            <div class="grid md:grid-cols-1 gap-4 mb-4">
+                <div>
+                    <label class="block text-white mb-2 font-medium">🔑 BitQuery API Key</label>
+                    <input type="password" id="apiKeyInput" 
+                           value="ory_at_JzlLDmQRzM_bMRIrwvurNai-kIrv5heF1Ivq_Z9irFk.tAOJDd6ME8nbsEuddHewuYCuZ_yhl5gu_EoDGDrlgzU"
+                           class="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/50 border border-white/30 focus:outline-none focus:border-blue-400"
+                           placeholder="Enter your BitQuery API key">
+                    <p class="text-xs text-blue-200 mt-1">💡 Stored in browser only - not saved anywhere</p>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-1 gap-4 mb-4">
+                <div>
+                    <label class="block text-white mb-2 font-medium">Token Contract Address</label>
+                    <input type="text" id="tokenCA" value="8Jx8AAHj86wbQgUTjGuj6GTTL5Ps3cqxKRTvpaJApump"
+                           class="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/50 border border-white/30 focus:outline-none focus:border-blue-400">
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-white mb-2 font-medium">📅 Buy Window Start</label>
+                    <input type="datetime-local" id="startTime" value="2026-01-18T05:00"
+                           class="w-full px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-white mb-2 font-medium">📅 Buy Window End</label>
+                    <input type="datetime-local" id="buyWindowEnd" value="2026-01-20T09:00"
+                           class="w-full px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-white mb-2 font-medium">📅 Holding Check Time</label>
+                    <input type="datetime-local" id="holdingCheckTime" value="2026-01-22T23:00"
+                           class="w-full px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:outline-none focus:border-blue-400">
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-white mb-2 font-medium">💰 Minimum Buy Amount (USD)</label>
+                    <input type="number" id="minBuyUSD" value="100"
+                           class="w-full px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:outline-none focus:border-blue-400">
+                </div>
+                <div>
+                    <label class="block text-white mb-2 font-medium">📈 Minimum Holding (% of Supply)</label>
+                    <input type="number" id="minHoldingPct" value="0.1" step="0.01"
+                           class="w-full px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:outline-none focus:border-blue-400">
+                </div>
+            </div>
+
+            <button onclick="runAnalysis()" id="analyzeBtn"
+                    class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all">
+                🔍 Run Analysis
+            </button>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMsg" class="hidden mb-6"></div>
+
+        <!-- Results Panel -->
+        <div id="resultsPanel" class="hidden bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <h2 class="text-2xl font-bold text-white mb-4">📊 Results</h2>
+            
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-blue-500/20 rounded-lg p-4 border border-blue-400/30">
+                    <div class="text-blue-200 text-sm mb-1">Total Supply</div>
+                    <div id="totalSupply" class="text-white text-2xl font-bold">-</div>
+                </div>
+                <div class="bg-purple-500/20 rounded-lg p-4 border border-purple-400/30">
+                    <div class="text-purple-200 text-sm mb-1">Total Buyers Found</div>
+                    <div id="totalBuyers" class="text-white text-2xl font-bold">-</div>
+                </div>
+                <div class="bg-green-500/20 rounded-lg p-4 border border-green-400/30">
+                    <div class="text-green-200 text-sm mb-1">Diamond Hands 💎</div>
+                    <div id="diamondHands" class="text-white text-2xl font-bold">-</div>
+                </div>
+            </div>
+
+            <div id="walletsTable" class="overflow-x-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, isError = false) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.className = `${isError ? 'bg-red-500/20 border-red-500/50' : 'bg-blue-500/20 border-blue-500/50'} backdrop-blur-lg rounded-2xl p-4 mb-6 border`;
+            statusMsg.innerHTML = `<div class="flex items-center gap-2 ${isError ? 'text-red-200' : 'text-blue-200'}">
+                <span>${isError ? '❌' : 'ℹ️'}</span>
+                <span>${message}</span>
+            </div>`;
+            statusMsg.classList.remove('hidden');
+        }
+
+        async function runAnalysis() {
+            const apiKey = document.getElementById('apiKeyInput').value;
+            const tokenCA = document.getElementById('tokenCA').value;
+            const startTime = document.getElementById('startTime').value;
+            const buyWindowEnd = document.getElementById('buyWindowEnd').value;
+            const holdingCheckTime = document.getElementById('holdingCheckTime').value;
+            const minBuyUSD = document.getElementById('minBuyUSD').value;
+            const minHoldingPct = document.getElementById('minHoldingPct').value;
+
+            if (!apiKey) {
+                showStatus('⚠️ Please enter your BitQuery API key', true);
+                return;
+            }
+
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Analyzing...';
+            document.getElementById('resultsPanel').classList.add('hidden');
+
+            try {
+                // Step 1: Get total supply
+                showStatus('Step 1/3: Fetching token supply...');
+                let totalSupply = 1000000000; // Default to 1 billion
+                
+                try {
+                    const supplyResponse = await fetch('https://api.mainnet-beta.solana.com', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: 1,
+                            method: 'getTokenSupply',
+                            params: [tokenCA]
+                        })
+                    });
+                    const supplyData = await supplyResponse.json();
+                    
+                    if (supplyData.result && supplyData.result.value) {
+                        totalSupply = parseFloat(supplyData.result.value.amount) / Math.pow(10, supplyData.result.value.decimals);
+                        console.log('✅ Got supply from RPC:', totalSupply);
+                    } else {
+                        console.warn('⚠️ Using default supply of 1 billion');
+                        showStatus('⚠️ Could not fetch exact supply, using 1 billion as estimate');
+                    }
+                } catch (supplyError) {
+                    console.warn('⚠️ Supply fetch failed, using default:', supplyError);
+                    showStatus('⚠️ Using default supply of 1 billion tokens');
+                }
+
+                // Step 2: Get buyers in window
+                showStatus('Step 2/3: Finding buyers in window...');
+                const buyersQuery = {
+                    query: `
+                        query ($token: String!, $start: DateTime!, $end: DateTime!, $min_usd: String!) {
+                            Solana {
+                                DEXTradeByTokens(
+                                    where: {
+                                        Trade: {
+                                            Currency: {MintAddress: {is: $token}},
+                                            Side: {
+                                                Type: {is: buy},
+                                                AmountInUSD: {gt: $min_usd}
+                                            },
+                                            PriceInUSD: {gt: 0}
+                                        }
+                                        Block: {
+                                            Time: {
+                                                since: $start,
+                                                till: $end
+                                            }
+                                        }
+                                    }
+                                    limit: {count: 100}
+                                ) {
+                                    Trade { Account { Owner } }
+                                    boughtVolume: sum(of: Trade_Amount)
+                                    boughtVolumeUSD: sum(of: Trade_Side_AmountInUSD)
+                                }
+                            }
+                        }
+                    `,
+                    variables: {
+                        token: tokenCA,
+                        start: startTime + ':00Z',
+                        end: buyWindowEnd + ':00Z',
+                        min_usd: minBuyUSD
+                    }
+                };
+
+                const buyersResponse = await fetch('https://streaming.bitquery.io/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(buyersQuery)
+                });
+
+                const buyersData = await buyersResponse.json();
+                
+                console.log('Buyers Response:', buyersData);
+                
+                if (buyersData.errors) {
+                    throw new Error(buyersData.errors[0].message);
+                }
+
+                const buyers = buyersData.data?.Solana?.DEXTradeByTokens?.map(t => ({
+                    wallet: t.Trade.Account.Owner,
+                    boughtVolume: parseFloat(t.boughtVolume),
+                    costUSD: parseFloat(t.boughtVolumeUSD)
+                })) || [];
+
+                if (buyers.length === 0) {
+                    displayResults(totalSupply, 0, []);
+                    showStatus('No buyers found in the specified window', true);
+                    return;
+                }
+
+                // Step 3: Get balances at holding check time
+                showStatus('Step 3/3: Checking balances at hold time...');
+                const balanceQuery = {
+                    query: `
+                        query ($token: String!, $time_check: DateTime!, $wallets: [String!]) {
+                            Solana {
+                                BalanceUpdates(
+                                    where: {
+                                        BalanceUpdate: {
+                                            Currency: {MintAddress: {is: $token}},
+                                            Account: {Owner: {in: $wallets}}
+                                        }
+                                        Block: {Time: {till: $time_check}}
+                                    }
+                                ) {
+                                    BalanceUpdate {
+                                        Account {
+                                            Owner
+                                        }
+                                    }
+                                    balance_at_time: sum(of: BalanceUpdate_Amount)
+                                }
+                            }
+                        }
+                    `,
+                    variables: {
+                        token: tokenCA,
+                        time_check: holdingCheckTime + ':00Z',
+                        wallets: buyers.map(b => b.wallet)
+                    }
+                };
+
+                const balanceResponse = await fetch('https://streaming.bitquery.io/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(balanceQuery)
+                });
+
+                const balanceData = await balanceResponse.json();
+                
+                console.log('Balance Response:', balanceData);
+                
+                if (balanceData.errors) {
+                    throw new Error(balanceData.errors[0].message);
+                }
+
+                const balanceMap = {};
+                balanceData.data?.Solana?.BalanceUpdates?.forEach(item => {
+                    const owner = item.BalanceUpdate.Account.Owner;
+                    balanceMap[owner] = Math.max(0, parseFloat(item.balance_at_time));
+                });
+
+                // Combine and filter
+                const finalWallets = buyers
+                    .map(buyer => {
+                        const balance = balanceMap[buyer.wallet] || 0;
+                        const pctSupply = (balance / totalSupply) * 100;
+                        return {
+                            ...buyer,
+                            balanceAtCheckTime: balance,
+                            pctSupply: pctSupply
+                        };
+                    })
+                    .filter(w => w.pctSupply >= parseFloat(minHoldingPct))
+                    .sort((a, b) => b.pctSupply - a.pctSupply);
+
+                displayResults(totalSupply, buyers.length, finalWallets);
+                showStatus('✅ Analysis complete!');
+
+            } catch (err) {
+                showStatus(`Error: ${err.message}`, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔍 Run Analysis';
+            }
+        }
+
+        function displayResults(totalSupply, totalBuyers, wallets) {
+            document.getElementById('totalSupply').textContent = totalSupply.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('totalBuyers').textContent = totalBuyers;
+            document.getElementById('diamondHands').textContent = wallets.length;
+
+            const tableDiv = document.getElementById('walletsTable');
+            
+            if (wallets.length > 0) {
+                let tableHTML = `
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white/20">
+                                <th class="text-left text-white py-3 px-2">Wallet</th>
+                                <th class="text-right text-white py-3 px-2">Bought (USD)</th>
+                                <th class="text-right text-white py-3 px-2">Balance at Check</th>
+                                <th class="text-right text-white py-3 px-2">% of Supply</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                wallets.forEach(wallet => {
+                    tableHTML += `
+                        <tr class="border-b border-white/10 hover:bg-white/5">
+                            <td class="py-3 px-2 text-blue-300 font-mono text-sm">
+                                ${wallet.wallet.slice(0, 8)}...${wallet.wallet.slice(-6)}
+                            </td>
+                            <td class="text-right py-3 px-2 text-white">
+                                $${wallet.costUSD.toLocaleString(undefined, {maximumFractionDigits: 2})}
+                            </td>
+                            <td class="text-right py-3 px-2 text-white">
+                                ${wallet.balanceAtCheckTime.toLocaleString(undefined, {maximumFractionDigits: 2})}
+                            </td>
+                            <td class="text-right py-3 px-2 text-green-400 font-bold">
+                                ${wallet.pctSupply.toFixed(4)}%
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += '</tbody></table>';
+                tableDiv.innerHTML = tableHTML;
+            } else {
+                tableDiv.innerHTML = '<div class="text-center text-white/70 py-8">No wallets met the criteria</div>';
+            }
+
+            document.getElementById('resultsPanel').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -116,6 +116,22 @@
             statusMsg.classList.remove('hidden');
         }
 
+        function copyToClipboard(text, buttonId) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById(buttonId);
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '✓';
+                btn.classList.add('bg-green-500');
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-green-500');
+                }, 1500);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
         async function runAnalysis() {
             const apiKey = document.getElementById('apiKeyInput').value;
             const tokenCA = document.getElementById('tokenCA').value;
@@ -314,22 +330,6 @@
             }
         }
 
-        function copyToClipboard(text, buttonId) {
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = document.getElementById(buttonId);
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '✓';
-                btn.classList.add('bg-green-500');
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.classList.remove('bg-green-500');
-                }, 1500);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                alert('Failed to copy to clipboard');
-            });
-        }
-
         function displayResults(totalSupply, totalBuyers, wallets) {
             document.getElementById('totalSupply').textContent = totalSupply.toLocaleString(undefined, {maximumFractionDigits: 0});
             document.getElementById('totalBuyers').textContent = totalBuyers;
@@ -353,11 +353,18 @@
 
                 wallets.forEach((wallet, idx) => {
                     const btnId = `copy-btn-${idx}`;
+                    const gmgnUrl = `https://gmgn.ai/sol/address/${wallet.wallet}`;
                     tableHTML += `
                         <tr class="border-b border-white/10 hover:bg-white/5">
                             <td class="py-3 px-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-blue-300 font-mono text-sm break-all">${wallet.wallet}</span>
+                                    <a href="${gmgnUrl}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer" 
+                                       class="text-blue-400 hover:text-blue-300 font-mono text-sm break-all underline decoration-dotted hover:decoration-solid transition-all"
+                                       title="View on GMGN">
+                                        ${wallet.wallet}
+                                    </a>
                                     <button 
                                         id="${btnId}"
                                         onclick="copyToClipboard('${wallet.wallet}', '${btnId}')"
@@ -368,7 +375,7 @@
                                 </div>
                             </td>
                             <td class="text-right py-3 px-2 text-white">
-                                ${wallet.costUSD.toLocaleString(undefined, {maximumFractionDigits: 2})}
+                                $${wallet.costUSD.toLocaleString(undefined, {maximumFractionDigits: 2})}
                             </td>
                             <td class="text-right py-3 px-2 text-white">
                                 ${wallet.balanceAtCheckTime.toLocaleString(undefined, {maximumFractionDigits: 2})}
